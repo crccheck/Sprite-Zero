@@ -13,7 +13,7 @@ parser = OptionParser()
 
 PADDING = 10
 
-PATTERN = r'url\([\'"]?([^\'"]+)[\'"]?\).*?(0|\d+px)\s+(0|\d+px)'
+PATTERN = r'url\([\'"]?([^\'"]+)[\'"]?\).*?(0|-?\d+px)\s+(0|-?\d+px)'
 
 
 def uri_to_file(uri):

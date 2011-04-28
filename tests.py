@@ -36,6 +36,12 @@ class TestRegExpPattern(unittest.TestCase):
         match = re.search(PATTERN, line)
         self.assertEqual(('a/b/c.png', '1px', '2px'), match.groups())
 
+    def test_negative_offsets(self):
+        #using mixed quotes here to do two tests in one
+        line = "background: url(\"a/b/c.png') no-repeat scroll -1px -2px #000;"
+        match = re.search(PATTERN, line)
+        self.assertEqual(('a/b/c.png', '-1px', '-2px'), match.groups())
+
 class TestURIReading(unittest.TestCase):
     def test_read_absolute_path(self):
         uri = "/images/someimage.png"
