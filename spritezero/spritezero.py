@@ -4,8 +4,10 @@
 import re
 from optparse import OptionParser
 import os
+from urllib2 import urlopen
 
 import Image
+
 
 parser = OptionParser()
 
@@ -21,8 +23,12 @@ def uri_to_file(uri):
 
     """
     if uri[0] == '/':
-        uri = uri[1:]
-    return uri
+        return uri[1:]
+    elif re.match(r"http", uri):
+        # TODO close files
+        return urlopen(uri)
+    else:
+        raise NotImplementedError("Can't handle uri of type: url(%s) yet" % uri)
 
 def get_dimensions(image_file):
     image = Image.open(image_file)
@@ -53,6 +59,7 @@ def sprite_for_file(f):
             # yo dawg, i heard you like sprite so i sprited a sprite and it broke
             continue
         if groups[0] not in lookup:
+            print groups
             size = get_dimensions(uri_to_file(groups[0]))
             lookup[groups[0]] = {'size': size,
                                  'length': size[0] * size[1]}
@@ -94,6 +101,6 @@ if __name__ == "__main__":
     original_css = args[0]
     replacement_css = original_css + ".tmp"
     sprite_png = original_css + "-sprite.png"
-    with open(original_css,"r") as f:
+    with open(original_css, "r") as f:
         sprite_for_file(f)
     replace_css()
