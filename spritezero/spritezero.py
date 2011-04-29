@@ -91,7 +91,7 @@ def sprite_for_file(f):
             print "\n"
     new_f.close()
 
-def replace_css():
+def replace_old_css():
     """Replace the old css file with the new one"""
     os.remove(original_css)
     os.rename(replacement_css, original_css)
@@ -103,4 +103,4 @@ if __name__ == "__main__":
     sprite_png = original_css + "-sprite.png"
     with open(original_css, "r") as f:
         sprite_for_file(f)
-    replace_css()
+    replace_old_css()
