@@ -42,6 +42,11 @@ class TestRegExpPattern(unittest.TestCase):
         match = re.search(PATTERN, line)
         self.assertEqual(('a/b/c.png', '-1px', '-2px'), match.groups())
 
+    def test_skip_imports(self):
+        line = '@import url("import.css");'
+        match = re.search(PATTERN, line)
+        self.assertEqual(None, match)
+
 class TestURIReading(unittest.TestCase):
     def test_read_absolute_path(self):
         uri = "/images/someimage.png"
