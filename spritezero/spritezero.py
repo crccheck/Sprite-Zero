@@ -84,7 +84,10 @@ def sprite_for_file(f):
     new_f = open(replacement_css, "w")
     f.seek(0)
     for line in f:
-        newline = re.sub(pattern, replace_css, line)
+        try:
+            newline = re.sub(pattern, replace_css, line)
+        except KeyError:
+            newline = line
         new_f.write(newline)
         if newline != line:
             print line, newline
