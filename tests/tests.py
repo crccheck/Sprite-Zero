@@ -10,7 +10,7 @@ from spritezero import *
 class TestRegExpPattern(unittest.TestCase):
     def setUp(self):
         self.converter = SpriteZero()
-        self.pattern = self.converter.PATTERN
+        self.pattern = self.converter.pattern
 
     def test_full_with_color_last(self):
         line = "background: url(a/b/c.png) no-repeat scroll 1px 2px #000;"
@@ -58,7 +58,7 @@ class TestRegExpPattern(unittest.TestCase):
 class TestRegExpPatternReplacement(unittest.TestCase):
     def setUp(self):
         self.converter = SpriteZero()
-        self.pattern = self.converter.PATTERN
+        self.pattern = self.converter.pattern
         self.converter.sprite_png = 'sprite.png'
 
     def test_trivial_offset(self):
@@ -78,15 +78,18 @@ class TestConversion(unittest.TestCase):
         converter = SpriteZero()
         converter.sprite_png = "tests/tmp/test-sprite.png"
         test_input = "abcdefghijklmnopqrstuvwxyz"
-        test_output = converter.sprite_for_file(test_input)
+        test_output = converter.make(test_input)
         self.assertEqual(test_output, test_input)
 
     def test_string_identity_case(self):
         converter = SpriteZero()
         converter.sprite_png = "tests/tmp/test-sprite.png"
         test_input = "background: url(/tests/resources/40x40.png) no-repeat scroll 1px 2px;"
-        test_output = converter.sprite_for_file(test_input)
+        test_output = converter.make(test_input)
         self.assertEqual(test_output, 'background: url(/tests/tmp/test-sprite.png) no-repeat scroll 1px 2px;')
+
+    def test_file_conversion(self):
+        converter = SpriteZero()
 
 class TestURIReading(unittest.TestCase):
     def setUp(self):

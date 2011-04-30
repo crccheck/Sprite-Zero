@@ -14,8 +14,8 @@ parser = OptionParser()
 
 class SpriteZero:
     def __init__(self):
-        self.PADDING = 10
-        self.PATTERN = r'url\([\'"]?([^\'"]+)[\'"]?\).*?(0|-?\d+px)\s+(0|-?\d+px)'
+        self.padding = 10
+        self.pattern = r'url\([\'"]?([^\'"]+)[\'"]?\).*?(0|-?\d+px)\s+(0|-?\d+px)'
         self.lookup = {}
 
     def uri_to_file(self, uri):
@@ -44,22 +44,11 @@ class SpriteZero:
         y = int(re.sub(r"\D+", "", groups[2])) - replacement['offset'][1]
         return "url(/%s) no-repeat scroll %dpx %dpx" % (self.sprite_png, x, y)
 
-    def sprite_for_file(self, f):
-        def lookup_to_list(lookup):
-            out = []
-            for key, value in lookup.iteritems():
-                value['uri'] = key
-                out.append(value)
-            return out
-
-        return_type = "file" if isinstance(f, file) else "string"
-
-        if return_type == "string":
-            f = StringIO(f)
-
-        pattern = self.PATTERN
+    def generate_image_inventory(self):
+        """First pass through the file, get image sizes"""
+        f = self.input_file
         for line in f:
-            match = re.search(pattern, line)
+            match = re.search(self.pattern, line)
             if not match:
                 continue
             groups = match.groups()
@@ -71,41 +60,69 @@ class SpriteZero:
                 self.lookup[groups[0]] = {'size': size,
                                           'length': size[0] * size[1]}
 
-        if len(self.lookup):
-            lookup_list = lookup_to_list(self.lookup)
-            lookup_list.sort(key=lambda x: x['length'])
+    def generate_sprite_image(self):
+        def lookup_to_list(lookup):
+            out = []
+            for key, value in lookup.iteritems():
+                value['uri'] = key
+                out.append(value)
+            return out
 
-            width = max([x['size'][0] for x in self.lookup.values()])    # max width
-            height = sum([x['size'][1] for x in self.lookup.values()]) + \
-                     self.PADDING * len(self.lookup)
+        lookup_list = lookup_to_list(self.lookup)
+        lookup_list.sort(key=lambda x: x['length'])
 
-            sprite = Image.new("RGBA", (width, height))
-            last_y = 0
-            for x in lookup_list:
-                image = Image.open(self.uri_to_file(x['uri']))
-                offset = (0, last_y)
-                sprite.paste(image, offset)
-                self.lookup[x['uri']]['offset'] = offset
-                last_y += image.size[1] + self.PADDING
+        width = max([x['size'][0] for x in self.lookup.values()])    # max width
+        height = sum([x['size'][1] for x in self.lookup.values()]) + \
+                 self.padding * len(self.lookup)
 
-            sprite.save(self.sprite_png, "PNG")
+        sprite = Image.new("RGBA", (width, height))
+        last_y = 0
+        for x in lookup_list:
+            image = Image.open(self.uri_to_file(x['uri']))
+            offset = (0, last_y)
+            sprite.paste(image, offset)
+            self.lookup[x['uri']]['offset'] = offset
+            last_y += image.size[1] + self.padding
 
+        sprite.save(self.sprite_png, "PNG")
 
-        if return_type == "string":
+    def generate_new_css(self):
+        """Second pass, create css sprite"""
+        f = self.input_file
+        if self.return_type == "string":
             new_f = StringIO()
         else:
             new_f = open(replacement_css, "w")
         f.seek(0)
         for line in f:
             try:
-                newline = re.sub(pattern, self.replace_css, line)
+                newline = re.sub(self.pattern, self.replace_css, line)
             except KeyError:
                 newline = line
             new_f.write(newline)
             if newline != line:
                 print line, newline
                 print "\n"
-        if return_type == "string":
+        return new_f
+
+    def make(self, f):
+        """
+        main function, takes an input file and returns a new file using sprites
+
+        """
+        self.return_type = "file" if isinstance(f, file) else "string"
+        if self.return_type == "string":
+            f = StringIO(f)
+        self.input_file = f
+
+        self.generate_image_inventory()
+
+        if len(self.lookup):
+            self.generate_sprite_image()
+
+        new_f = self.generate_new_css()
+
+        if self.return_type == "string":
             new_f.seek(0)
             return new_f.read()
         new_f.close()
@@ -122,6 +139,6 @@ if __name__ == "__main__":
     with open(original_css, "r") as f:
         converter = SpriteZero()
         converter.sprite_png = original_css + "-sprite.png"
-        converter.sprite_for_file(f)
+        converter.make(f)
     converter.replace_old_css()
 
