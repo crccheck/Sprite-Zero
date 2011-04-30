@@ -1,0 +1,52 @@
+
+
+.small {
+    background: url(10x10-ff0066.png) no-repeat scroll 0 0;
+    height: 10px;
+    width: 10px;
+}
+
+.medium {
+    background: url(20x20-3300ff.png) no-repeat scroll 0 0;
+    height: 20px;
+    width: 20px;
+}
+
+.tall {
+    background: url(20x40-ffcc00.png) no-repeat scroll 0 0;
+    height: 40px;
+    width: 20px;
+}
+
+.wide {
+    background: url(40x20-ff6600.png) no-repeat scroll 0 0;
+    height: 20px;
+    width: 40px;
+}
+
+.large {
+    background: url(40x40.png) no-repeat scroll 0 0;
+    height: 40px;
+    width: 40px;
+}
+
+.large.cyan {
+    background: url(40x40-00ffcc.png) no-repeat scroll 0 0;
+}
+
+.large.green {
+    background: url(40x40-33ff00.png) no-repeat scroll 0 0;
+}
+
+.x-tall {
+    background: url(40x80-99ff00.png) no-repeat scroll 0 0;
+    height: 80px;
+    width: 40px;
+}
+
+.x-wide {
+    background: url(80x40-0066ff.png) no-repeat scroll 0 0;
+    height: 40px;
+    width: 80px;
+}
+
