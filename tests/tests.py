@@ -1,6 +1,9 @@
 import unittest
 import re
+import os
+import sys
 
+sys.path[0:0] = os.path.join(os.path.dirname(__file__), '..')
 from spritezero import *
 
 
@@ -69,6 +72,21 @@ class TestRegExpPatternReplacement(unittest.TestCase):
         line = "background: url(a/b/c.png) no-repeat scroll 1px 2px;"
         self.assertEqual(re.sub(self.pattern, self.converter.replace_css, line),
             'background: url(/sprite.png) no-repeat scroll -1px 1px;');
+
+class TestConversion(unittest.TestCase):
+    def test_string_trivial_case(self):
+        converter = SpriteZero()
+        converter.sprite_png = "tests/tmp/test-sprite.png"
+        test_input = "abcdefghijklmnopqrstuvwxyz"
+        test_output = converter.sprite_for_file(test_input)
+        self.assertEqual(test_output, test_input)
+
+    def test_string_identity_case(self):
+        converter = SpriteZero()
+        converter.sprite_png = "tests/tmp/test-sprite.png"
+        test_input = "background: url(/tests/resources/40x40.png) no-repeat scroll 1px 2px;"
+        test_output = converter.sprite_for_file(test_input)
+        self.assertEqual(test_output, 'background: url(/tests/tmp/test-sprite.png) no-repeat scroll 1px 2px;')
 
 class TestURIReading(unittest.TestCase):
     def setUp(self):

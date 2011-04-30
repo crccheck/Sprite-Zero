@@ -5,6 +5,7 @@ import re
 from optparse import OptionParser
 import os
 from urllib2 import urlopen
+from StringIO import StringIO
 
 import Image
 
@@ -51,6 +52,11 @@ class SpriteZero:
                 out.append(value)
             return out
 
+        return_type = "file" if isinstance(f, file) else "string"
+
+        if return_type == "string":
+            f = StringIO(f)
+
         pattern = self.PATTERN
         for line in f:
             match = re.search(pattern, line)
@@ -65,25 +71,30 @@ class SpriteZero:
                 self.lookup[groups[0]] = {'size': size,
                                           'length': size[0] * size[1]}
 
-        lookup_list = lookup_to_list(self.lookup)
-        lookup_list.sort(key=lambda x: x['length'])
+        if len(self.lookup):
+            lookup_list = lookup_to_list(self.lookup)
+            lookup_list.sort(key=lambda x: x['length'])
 
-        width = max([x['size'][0] for x in self.lookup.values()])    # max width
-        height = sum([x['size'][1] for x in self.lookup.values()]) + \
-                 self.PADDING * len(self.lookup)
+            width = max([x['size'][0] for x in self.lookup.values()])    # max width
+            height = sum([x['size'][1] for x in self.lookup.values()]) + \
+                     self.PADDING * len(self.lookup)
 
-        sprite = Image.new("RGBA", (width, height))
-        last_y = 0
-        for x in lookup_list:
-            image = Image.open(self.uri_to_file(x['uri']))
-            offset = (0, last_y)
-            sprite.paste(image, offset)
-            self.lookup[x['uri']]['offset'] = offset
-            last_y += image.size[1] + self.PADDING
+            sprite = Image.new("RGBA", (width, height))
+            last_y = 0
+            for x in lookup_list:
+                image = Image.open(self.uri_to_file(x['uri']))
+                offset = (0, last_y)
+                sprite.paste(image, offset)
+                self.lookup[x['uri']]['offset'] = offset
+                last_y += image.size[1] + self.PADDING
 
-        sprite.save(self.sprite_png, "PNG")
+            sprite.save(self.sprite_png, "PNG")
 
-        new_f = open(replacement_css, "w")
+
+        if return_type == "string":
+            new_f = StringIO()
+        else:
+            new_f = open(replacement_css, "w")
         f.seek(0)
         for line in f:
             try:
@@ -94,6 +105,9 @@ class SpriteZero:
             if newline != line:
                 print line, newline
                 print "\n"
+        if return_type == "string":
+            new_f.seek(0)
+            return new_f.read()
         new_f.close()
 
     def replace_old_css(self):
