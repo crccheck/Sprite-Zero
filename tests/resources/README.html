@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-<link href="test.css" rel="stylesheet" type="text/css"/>
+<link href="test.css" rel="stylesheet" type="text/css">
+<link href="../tmp/test.css" rel="stylesheet" type="text/css">
 <title>Sprite Zero Test</title>
 </head>
 <body>
-<div>
+<div class="column">
+    <p>
+        These should be solid colors (all but one) with a 1 pixel black border.
+    </p>
     <dl>
         <dt class="small"></dt><dd>10x10</dd>
         <dt class="medium"></dt><dd>20x20</dd>
@@ -17,6 +21,16 @@
         <dt class="x-tall"></dt><dd>40x80</dd>
         <dt class="x-wide"></dt><dd>80x40</dd>
     </dl>
+</div>
+<div class="column">
+    <p>
+        If you see an image here, that means you are viewing the post-test
+        version and this is the generated sprite:
+    </p>
+
+    <img src="../tmp/test.css-sprite.png">
+</div>
+<div class="clear">
 </div>
 </body>
 </html>

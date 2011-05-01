@@ -17,6 +17,7 @@ class SpriteZero:
         self.padding = 10
         self.pattern = r'url\([\'"]?([^\'"]+)[\'"]?\).*?(0|-?\d+px)\s+(0|-?\d+px)'
         self.lookup = {}
+        self.css_root = ""
 
     def uri_to_file(self, uri):
         """Translate the web root uri to local path.
@@ -30,7 +31,7 @@ class SpriteZero:
             # TODO close files
             return urlopen(uri)
         else:
-            raise NotImplementedError("Can't handle uri of type: url(%s) yet" % uri)
+            return self.css_root + uri
 
     def get_dimensions(self, image_file):
         image = Image.open(image_file)
@@ -42,7 +43,8 @@ class SpriteZero:
         replacement = self.lookup[groups[0]]
         x = int(re.sub(r"\D+", "", groups[1])) - replacement['offset'][0]
         y = int(re.sub(r"\D+", "", groups[2])) - replacement['offset'][1]
-        return "url(/%s) no-repeat scroll %dpx %dpx" % (self.sprite_png, x, y)
+        return "url(%s) no-repeat scroll %dpx %dpx" %\
+            (getattr(self, 'sprite_uri', self.sprite_png), x, y)
 
     def generate_image_inventory(self):
         """First pass through the file, get image sizes"""
@@ -92,7 +94,7 @@ class SpriteZero:
         if self.return_type == "string":
             new_f = StringIO()
         else:
-            new_f = open(replacement_css, "w")
+            new_f = open(self.replacement_css, "w")
         f.seek(0)
         for line in f:
             try:
@@ -113,6 +115,9 @@ class SpriteZero:
         self.return_type = "file" if isinstance(f, file) else "string"
         if self.return_type == "string":
             f = StringIO(f)
+        else:
+            self.css_root = os.path.dirname(f.name) + '/'
+            print "root found", self.css_root
         self.input_file = f
 
         self.generate_image_inventory()
@@ -130,15 +135,15 @@ class SpriteZero:
     def replace_old_css(self):
         """Replace the old css file with the new one"""
         os.remove(original_css)
-        os.rename(replacement_css, original_css)
+        os.rename(self.replacement_css, original_css)
 
 if __name__ == "__main__":
     options, args = parser.parse_args()
     original_css = args[0]
-    replacement_css = original_css + ".tmp"
     with open(original_css, "r") as f:
         converter = SpriteZero()
         converter.sprite_png = original_css + "-sprite.png"
+        converter.replacement_css = original_css + ".tmp"
         converter.make(f)
     converter.replace_old_css()
 
