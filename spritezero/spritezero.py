@@ -18,6 +18,7 @@ class SpriteZero:
         self.pattern = r'url\([\'"]?([^\'"]+)[\'"]?\).*?(0|-?\d+px)\s+(0|-?\d+px)'
         self.lookup = {}
         self.css_root = ""
+        self.verbosity = 0
 
     def uri_to_file(self, uri):
         """Translate the web root uri to local path.
@@ -70,23 +71,50 @@ class SpriteZero:
                 out.append(value)
             return out
 
+        def place_images(sprite=None):
+            """Place images in a box, returns the actual height used"""
+            cursor = [0, 0]
+            row_height = 0
+            last_height = 0
+            last_width = 0
+            for image in lookup_list:
+                im = Image.open(self.uri_to_file(image['uri']))
+                # if height is <= last_height: advance cursor to the right
+                if (image['size'][1] <= last_height):
+                    cursor[0] += last_width + self.padding
+                    # check to make sure cursor wasn't advanced off the page
+                    if cursor[0] + image['size'][0] > width:
+                        cursor[0] = 0
+                        cursor[1] += row_height + self.padding
+                        row_height = image['size'][1]
+                # else: advance cursor to next line
+                elif cursor[1]:
+                    cursor[0] = 0
+                    cursor[1] += row_height + self.padding
+                    row_height = image['size'][1]
+                # else: we're on the first row
+                else:
+                    row_height = image['size'][1]
+                offset = tuple(cursor)
+                if sprite:
+                    sprite.paste(im, offset)
+                self.lookup[image['uri']]['offset'] = offset
+                last_height = image['size'][1]
+                last_width = image['size'][0]
+            if sprite:
+                sprite.save(self.sprite_png, "PNG")
+            return cursor[1] + row_height
+
+
         lookup_list = lookup_to_list(self.lookup)
-        lookup_list.sort(key=lambda x: x['length'])
+        lookup_list.sort(key=lambda x: x['length'], reverse=True)
 
         width = max([x['size'][0] for x in self.lookup.values()])    # max width
-        height = sum([x['size'][1] for x in self.lookup.values()]) + \
-                 self.padding * len(self.lookup)
-
+        height = place_images()
+        #width *= 2
         sprite = Image.new("RGBA", (width, height))
-        last_y = 0
-        for x in lookup_list:
-            image = Image.open(self.uri_to_file(x['uri']))
-            offset = (0, last_y)
-            sprite.paste(image, offset)
-            self.lookup[x['uri']]['offset'] = offset
-            last_y += image.size[1] + self.padding
+        place_images(sprite)
 
-        sprite.save(self.sprite_png, "PNG")
 
     def generate_new_css(self):
         """Second pass, create css sprite"""
@@ -102,8 +130,8 @@ class SpriteZero:
             except KeyError:
                 newline = line
             new_f.write(newline)
-            if newline != line:
-                print line, newline
+            if self.verbosity and newline != line:
+                print "A>", line, "B>", newline
                 print "\n"
         return new_f
 
@@ -117,7 +145,8 @@ class SpriteZero:
             f = StringIO(f)
         else:
             self.css_root = os.path.dirname(f.name) + '/'
-            print "root found", self.css_root
+            if self.verbosity:
+                print "* css root found:", self.css_root
         self.input_file = f
 
         self.generate_image_inventory()
