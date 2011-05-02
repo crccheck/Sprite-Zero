@@ -10,8 +10,6 @@ from StringIO import StringIO
 import Image
 
 
-parser = OptionParser()
-
 class SpriteZero:
     def __init__(self):
         self.padding = 10
@@ -167,12 +165,24 @@ class SpriteZero:
         os.rename(self.replacement_css, original_css)
 
 if __name__ == "__main__":
+    parser = OptionParser()
+    parser.add_option("-i", dest="input", help="input css file")
+    parser.add_option("-o", dest="output", help="output css file, DEFAULT: overwrite original")
+    parser.add_option("-s", "--sprite", dest="sprite_file", help="Where to put the sprite file")
+    parser.add_option("-u", "--sprite_uri", dest="sprite_uri", help="What URI to reference the sprite file")
+    parser.add_option("-v", action="store_true", dest="verbosity", help="Verbose mode")
+
     options, args = parser.parse_args()
-    original_css = args[0]
+    print options
+    original_css = options.input
     with open(original_css, "r") as f:
         converter = SpriteZero()
-        converter.sprite_png = original_css + "-sprite.png"
-        converter.replacement_css = original_css + ".tmp"
+        converter.sprite_png = getattr(options, "sprite_file") or original_css + "-sprite.png"
+        if getattr(options,"sprite_uri"):
+            converter.sprite_uri = options.sprite_uri
+        converter.replacement_css = getattr(options, "output") or original_css + ".tmp"
+        converter.verbosity = options.verbosity
         converter.make(f)
-    converter.replace_old_css()
+    if not getattr(options, "output"):
+        converter.replace_old_css()
 
